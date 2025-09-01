@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora Agronómica: Nutrición de Suelos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/main.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Calculadora Agronómica: Nutrición de Suelos</h1>
+      <div class="subtitle">Introduce el análisis de suelo y obtén una recomendación técnica de N–P<sub>2</sub>O<sub>5</sub>–K<sub>2</sub>O, enmiendas y costos. Ahora con calendario y manejo por fertilizante. </div>
+    </div>
+    <div class="row right">
+      <button class="btn secondary" id="btnDemo" title="Rellenar con datos ejemplo">Cargar ejemplo</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- ENTRADA -->
+    <section class="card" aria-labelledby="inputs-title">
+      <h2 id="inputs-title">Datos de análisis de suelo</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="ph">pH (agua 1:1)</label>
+          <input id="ph" type="number" step="0.01" min="3.5" max="9.5" placeholder="Ej. 5.6" inputmode="decimal">
+          <div class="help">Diagnóstico de acidez/alcalinidad del suelo.</div>
+        </div>
+
+        <div class="field">
+          <label for="mo">Materia Orgánica (MO) %</label>
+          <input id="mo" type="number" step="0.1" min="0" max="20" placeholder="Ej. 3.2" inputmode="decimal">
+          <div class="help">Regla de mineralización: ~20 kg N/ha por cada 1% MO/año.</div>
+        </div>
+
+        <div class="field">
+          <label for="p_ppm">Fósforo (P) en ppm</label>
+          <input id="p_ppm" type="number" step="1" min="0" max="200" placeholder="Ej. 12" inputmode="numeric">
+          <div class="help">Se asume 1 ppm ≈ 2 kg/ha (0–20 cm, BD≈1.3).</div>
+        </div>
+
+        <div class="field">
+          <label for="k_ppm">Potasio (K) en ppm</label>
+          <input id="k_ppm" type="number" step="1" min="0" max="800" placeholder="Ej. 180" inputmode="numeric">
+          <div class="help">Conversión 1 ppm ≈ 2 kg/ha (0–20 cm).</div>
+        </div>
+
+        <div class="field">
+          <label for="ca">Calcio (Ca) (meq/100g)</label>
+          <input id="ca" type="number" step="0.1" min="0" max="40" placeholder="Ej. 8.5" inputmode="decimal">
+          <div class="help">Usado como proxy de CICE/estructura para ajustar enmiendas.</div>
+        </div>
+
+        <div class="field">
+          <label for="mg">Magnesio (Mg) (meq/100g)</label>
+          <input id="mg" type="number" step="0.1" min="0" max="20" placeholder="Ej. 2.1" inputmode="decimal">
+          <div class="help">Ca + Mg ayudan a estimar capacidad tampón.</div>
+        </div>
+
+        <div class="field">
+          <label for="cultivo">Cultivo objetivo</label>
+          <select id="cultivo">
+            <option value="maiz">Maíz (grano)</option>
+            <option value="pastos">Pastos (forrajeros)</option>
+            <option value="hortalizas">Hortalizas (intensivo)</option>
+            <option value="algodon">Algodón</option>
+            <option value="frijol_caupi">Fríjol Caupí</option>
+            <option value="palma">Palma de Aceite</option>
+            <option value="arroz">Arroz</option>
+          </select>
+          <div class="help">Cada cultivo tiene requerimientos y niveles óptimos específicos.</div>
+        </div>
+
+        <div class="field">
+          <label for="area">Área del lote (ha)</label>
+          <input id="area" type="number" step="0.01" min="0.01" max="10000" placeholder="Ej. 5.0" inputmode="decimal">
+          <div class="help">Se usa para calcular el costo total del predio.</div>
+        </div>
+
+        <div class="field">
+          <label for="srcP">Fuente de Fósforo (P)</label>
+          <select id="srcP">
+            <option value="MAP">MAP (11-52-0)</option>
+            <option value="DAP">DAP (18-46-0)</option>
+          </select>
+          <div class="help">Estas fuentes aportan N además de P. Se descuenta del N final.</div>
+        </div>
+
+        <div class="field">
+          <label for="srcK">Fuente de Potasio (K)</label>
+          <select id="srcK">
+            <option value="KCl">Cloruro de Potasio (0-0-60)</option>
+          </select>
+          <div class="help">Para simplificar se usa KCl; puedes ampliar a K₂SO₄ si lo necesitas.</div>
+        </div>
+
+        <div class="field" style="grid-column:1/-1">
+          <label for="moneda">Moneda de referencia</label>
+          <select id="moneda">
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+          </select>
+          <div class="help">Se usan precios referenciales; ajusta en el código según el mercado local.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button id="btnCalc" class="btn">Calcular Recomendación</button>
+        <button id="btnReset" class="btn secondary" type="button">Limpiar</button>
+        <span class="muted">Todas las cifras se expresan por hectárea (kg/ha o t/ha), salvo que se indique lo contrario.</span>
+      </div>
+    </section>
+
+    <!-- RESULTADOS -->
+    <section class="card" aria-labelledby="results-title">
+      <h2 id="results-title">Resultados</h2>
+
+      <div id="kpi" class="kpi" aria-live="polite">
+        <div class="pill">
+          <small class="muted">Estado de pH</small>
+          <b id="kpiPh">—</b>
+          <small id="kpiPhMsg">Ingrese datos y calcule.</small>
+        </div>
+        <div class="pill">
+          <small class="muted">Nutrientes a aplicar</small>
+          <b id="kpiNPK">—</b>
+          <small class="muted">N – P₂O₅ – K₂O (kg/ha)</small>
+        </div>
+        <div class="pill">
+          <small class="muted">Productos sugeridos</small>
+          <b id="kpiProd">—</b>
+          <small class="muted">Urea / MAP-DAP / KCl</small>
+        </div>
+      </div>
+
+      <div class="result-block">
+        <div id="fertOut"></div>
+        <div id="limeOut"></div>
+        <div id="costOut"></div>
+        <div id="calendarOut"></div>
+      </div>
+
+      <div class="small">
+        <strong>Supuestos técnicos:</strong>
+        <ul>
+          <li>Ef. N = 50% (pérdidas por volatilización/lixiviación), Ef. P<sub>2</sub>O<sub>5</sub> = 30%, Ef. K<sub>2</sub>O = 50%.</li>
+          <li>1 ppm ≈ 2 kg/ha en 0–20 cm (BD≈1.3). Urea 46% N; MAP 11–52–0; DAP 18–46–0; KCl 0–0–60.</li>
+          <li>Primero se corrigen P y K (descontando el N que aportan MAP/DAP) y luego se complementa el N con urea.</li>
+          <li>Enmiendas calculadas con fórmulas simplificadas (sin pH tampón ni textura). Úselo como línea base técnica.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+<script src="scripts/main.js"></script>
+  <footer>
+    © 2025 · Calculadora desarrollada con criterios agronómicos prácticos. Funcional para adaptar eficiencias, precios y calendarios a tu zona.
+  </footer>
+</body>
+</html>
