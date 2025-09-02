@@ -78,13 +78,13 @@
   const PPM_to_KGHA = 2;
 
   // Utiles de formato
-  const fmt1 = (x)=> isFinite(x) ? (Math.round(x*10)/10).toLocaleString('es-CO') : "—";
+  const fmt1 = (x)=> isFinite(x) ? (Math.round(x*100)/100).toLocaleString('es-CO') : "—";
   const fmt2 = (x)=> isFinite(x) ? (Math.round(x*100)/100).toLocaleString('es-CO') : "—";
 
   // Utilidad para formato de moneda
   function fmtMoneda(x, moneda) {
     if (!isFinite(x)) return "—";
-    if (moneda === "COP") return "$" + Math.round(x * 4000).toLocaleString("es-CO") + " COP";
+    if (moneda === "COP") return "$" + Math.round(x).toLocaleString("es-CO") + " COP";
     return "$" + (Math.round(x * 100) / 100).toLocaleString("en-US") + " USD";
   }
 
